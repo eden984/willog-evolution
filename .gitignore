@@ -1,0 +1,4 @@
+# 웹 공개에는 HTML + bgm.m4a + thumb.jpg만 필요해
+*.mp4
+*.wav
+__pycache__/

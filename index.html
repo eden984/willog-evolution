@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>윌로그의 진화 | 기록에서 실시간, 그리고 예측으로</title>
+<meta name="description" content="콜드체인 모니터링 윌로그의 진화를 담은 30초 아이소메트릭 모션 그래픽 (배경 음악 포함)">
+<meta name="theme-color" content="#071226">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Willog">
+<meta property="og:title" content="윌로그의 진화 — 기록에서 실시간, 그리고 예측으로">
+<meta property="og:description" content="BLE·NFC 기록에서 LTE·GPS 실시간으로, 그리고 AI 예측으로. 30초 모션 그래픽 (소리 켜고 보세요 🔊)">
+<meta property="og:url" content="https://eden984.github.io/willog-evolution/">
+<meta property="og:image" content="https://eden984.github.io/willog-evolution/thumb.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- fonts load in the background (non-blocking) so a slow font server can never stall the page -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all';window.gfReady=1;document.dispatchEvent(new Event('gf'))">
+<style>
+:root{
+  --bg:#071226; --cyan:#22D3EE; --blue:#3B82F6; --mint:#34D399; --red:#F43F5E; --amber:#FBBF24; --violet:#8B5CF6;
+  --text:#EAF2FF; --muted:#93A9C9; --dim:#4F6585;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Noto Sans KR',sans-serif;color:var(--text)}
+#vp{position:fixed;inset:0;overflow:hidden;contain:strict}
+#stage{position:absolute;width:1920px;height:1080px;left:50%;top:50%;transform-origin:center;overflow:hidden;
+  background:radial-gradient(1100px 760px at 72% 40%, #12305A 0%, transparent 65%),
+             radial-gradient(900px 600px at 0% 100%, #0B2A3E 0%, transparent 60%), var(--bg)}
+svg.world{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:visible}
+
+/* ---------- scene system (driven by a master clock) ---------- */
+.scene{position:absolute;inset:0;opacity:0;
+  animation-name:sIn,sOut;animation-duration:.5s,.5s;
+  animation-delay:calc(var(--s)*1s),calc(var(--e)*1s - .5s);animation-fill-mode:both,forwards}
+.scene.last{animation-name:sIn;animation-duration:.5s;animation-delay:calc(var(--s)*1s);animation-fill-mode:both}
+@keyframes sIn{from{opacity:0}to{opacity:1}}
+@keyframes sOut{from{opacity:1}to{opacity:0}}
+.fu{animation:fadeUp .8s cubic-bezier(.2,.8,.2,1) calc(var(--d)*1s) both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:none}}
+.fi{animation:fadeIn .6s ease calc(var(--d)*1s) both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.fo{animation:fadeOut .5s ease calc(var(--d)*1s) both}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+.pop{animation:pop .6s cubic-bezier(.3,1.5,.5,1) calc(var(--d)*1s) both;transform-box:fill-box;transform-origin:center}
+@keyframes pop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+.draw{stroke-dasharray:1;stroke-dashoffset:1;animation:draw calc(var(--dur)*1s) ease-in-out calc(var(--d)*1s) both}
+@keyframes draw{to{stroke-dashoffset:0}}
+.zoom{animation:zoom 4.5s cubic-bezier(.2,.7,.2,1) calc(var(--d)*1s) both;transform-origin:1300px 500px}
+@keyframes zoom{from{transform:scale(1.32)}to{transform:scale(1)}}
+.flow{stroke-dasharray:8 12;animation:flow .8s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-20}}
+
+/* ---------- typography / left column ---------- */
+.col{position:absolute;left:110px;top:170px;width:760px}
+.tag{display:inline-flex;align-items:center;gap:14px;font-size:26px;font-weight:700;color:var(--muted)}
+.tag b{font-family:Montserrat;font-weight:800;font-size:22px;color:#071226;background:var(--cyan);padding:5px 12px;border-radius:8px}
+.title{font-size:104px;font-weight:900;letter-spacing:-3px;line-height:1.1;margin-top:22px}
+.sub{font-family:Montserrat,'Noto Sans KR';font-size:30px;font-weight:700;color:var(--cyan);margin-top:18px;letter-spacing:1px}
+.body{font-size:38px;line-height:1.45;color:#D7E3F5;margin-top:26px;font-weight:500}
+.body b{color:#fff;font-weight:900}
+.grad{background:linear-gradient(90deg,var(--cyan),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+.vgrad{background:linear-gradient(90deg,#C4B5FD,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ---------- data cards ---------- */
+.card{position:absolute;left:110px;top:610px;width:720px;height:362px;border-radius:26px;padding:26px 30px;
+  background:rgba(14,32,60,.78);border:1.5px solid rgba(140,190,255,.2);box-shadow:0 30px 60px rgba(0,0,0,.35)}
+.card h4{font-size:32px;font-weight:700;color:var(--muted)}
+.card .val{position:absolute;right:30px;top:18px;font-family:Montserrat;font-weight:800;font-size:40px}
+.card svg{position:absolute;left:30px;top:80px}
+.banner{position:absolute;left:30px;right:30px;bottom:20px;height:72px;border-radius:14px;display:flex;align-items:center;gap:14px;padding:0 20px;font-size:31px;font-weight:800;letter-spacing:-.5px}
+.banner i{font-style:normal;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#071226;flex:none}
+
+/* ---------- chapter stepper ---------- */
+.stepper{position:absolute;right:110px;top:66px;display:flex;align-items:center;gap:14px}
+.step{display:flex;align-items:center;gap:10px;padding:10px 20px;border-radius:999px;font-size:24px;font-weight:700;color:#7088AA;
+  border:1.5px solid rgba(140,190,255,.15);background:rgba(10,24,46,.6)}
+.step span{font-family:Montserrat;font-size:18px}
+.step.on{color:#071226;background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 30px rgba(34,211,238,.45);font-size:32px;padding:12px 26px}
+.step.on.ai{background:#A78BFA;border-color:#A78BFA;box-shadow:0 0 30px rgba(139,92,246,.5)}
+.step.done{color:var(--muted)}
+.arrow{width:30px;height:2px;background:rgba(140,190,255,.3)}
+
+/* ---------- hook / ending ---------- */
+.hook{position:absolute;left:110px;top:300px}
+.eyebrow{font-family:Montserrat;font-weight:700;font-size:24px;letter-spacing:6px;color:var(--cyan)}
+.big{font-size:110px;font-weight:900;letter-spacing:-3px;line-height:1.15;margin-top:20px}
+.center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.logo{display:flex;align-items:center;gap:34px}
+.mark{width:160px;height:160px}
+.word{font-family:Montserrat;font-weight:800;font-size:164px;letter-spacing:-4px;line-height:1}
+.tagline{font-size:46px;font-weight:700;margin-top:52px;letter-spacing:-1px}
+.url{font-family:Montserrat;font-weight:700;font-size:30px;color:var(--cyan);margin-top:24px;letter-spacing:2px}
+.evo{position:absolute;left:0;right:0;top:150px;text-align:center;font-size:52px;font-weight:900;letter-spacing:-1px}
+
+/* ---------- player UI ---------- */
+#start{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(3,8,18,.72);cursor:pointer}
+#start div{display:flex;align-items:center;gap:18px;padding:22px 38px;border-radius:999px;background:var(--cyan);color:#071226;font-size:22px;font-weight:900}
+#start.hide{display:none}
+#start{flex-direction:column;gap:18px}
+#start .rot{display:none;color:#fff;font-size:20px;font-weight:800;padding:12px 22px;border-radius:14px;border:2px solid var(--cyan);background:rgba(34,211,238,.12);text-align:center;line-height:1.5}
+#end{position:fixed;left:50%;top:78%;transform:translate(-50%,-50%);z-index:15;display:none;gap:12px}
+#end.show{display:flex}
+#end a,#end button{font-family:'Noto Sans KR',sans-serif;font-size:17px;font-weight:800;padding:12px 22px;border-radius:999px;cursor:pointer;text-decoration:none}
+#end a{background:var(--cyan);color:#071226;border:0}
+#end button{background:rgba(255,255,255,.08);color:#fff;border:1.5px solid rgba(255,255,255,.35)}
+.drift{animation:drift2 8s ease-out calc(var(--d)*1s) both;transform-origin:1300px 520px}
+@keyframes drift2{from{transform:scale(1.1) translateX(40px)}to{transform:none}}
+@media (orientation:portrait){#start .rot{display:block}}
+#ui{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:10px 18px;border-radius:999px;
+  background:rgba(10,20,40,.85);border:1px solid rgba(255,255,255,.15);font-size:14px;color:#cfe0ff;z-index:10;transition:opacity .4s}
+#ui button{background:none;border:0;color:#fff;font-size:16px;cursor:pointer;width:32px;height:32px;border-radius:50%}
+#ui button:hover{background:rgba(255,255,255,.12)}
+#seek{width:340px;min-width:60px;flex:1 1 auto;accent-color:var(--cyan)}
+#ui{max-width:calc(100vw - 24px);box-sizing:border-box}
+#ui.hide,#ui.idle{opacity:0;pointer-events:none}
+@media (hover:none){.hint{display:none}}
+.foUp{animation:foUp .35s ease-in calc(var(--d)*1s) both}
+@keyframes foUp{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-90px)}}
+#start.loading div{opacity:.55;pointer-events:none}
+#start.loading{cursor:progress}
+#rotHint{position:fixed;left:50%;top:max(14px, calc(50vh - 28.125vw - 64px));transform:translateX(-50%);z-index:12;display:none;
+  padding:10px 18px;border-radius:999px;background:rgba(34,211,238,.16);border:1.5px solid var(--cyan);color:#fff;font-size:15px;font-weight:800;white-space:nowrap}
+@media (orientation:portrait){body.started #rotHint{display:block}}
+#time{font-variant-numeric:tabular-nums;min-width:90px;text-align:right}
+.hint{opacity:.6;font-size:12px}
+</style>
+</head>
+<body>
+<div id="vp">
+<div id="stage">
+  <div id="flakes"></div>
+
+  <!-- ===== S1 0–4.2 : Hook ===== -->
+  <section class="scene" style="--s:-.6;--e:4.2">
+    <svg class="world zoom" id="w1" style="--d:0"></svg>
+    <div class="hook">
+      <div class="eyebrow fi" style="--d:-.6">COLD CHAIN · 저온 물류</div>
+      <div class="big fu" style="--d:-.75">지금 이 화물,</div>
+      <div class="big fu" style="--d:.5">안전할까요?</div>
+      <div class="body fu" style="--d:1.6;margin-top:36px">콜드체인을 지켜온 <b>윌로그의 진화</b></div>
+    </div>
+  </section>
+
+  <!-- ===== S2 4–12.2 : Passive (BLE · NFC) ===== -->
+  <section class="scene" style="--s:4;--e:12.2">
+    <svg class="world drift" id="w2" style="--d:4;filter:saturate(.5) brightness(.95)"></svg>
+    <div class="col">
+      <div class="tag fi" style="--d:4.2"><b>01</b>그동안</div>
+      <div class="title fu" style="--d:4.3">기록하다</div>
+      <div class="sub fu" style="--d:4.6">BLE · NFC 패시브 센서</div>
+      <div class="body fu" style="--d:5.0">기록은 빠짐없이 정확했지만,<br>확인은 <b>도착한 뒤</b>에야 가능했어요</div>
+    </div>
+    <div class="card fu" style="--d:8.35">
+      <h4>도착 후 태그해서 확인한 기록</h4>
+      <svg width="660" height="180" id="bars"></svg>
+      <div class="banner fi" style="--d:9.5;background:rgba(251,191,36,.12);border:1.5px solid rgba(251,191,36,.6)"><i style="background:var(--amber)">!</i>도착한 뒤에야 이탈을 알 수 있었어요</div>
+    </div>
+  </section>
+
+  <!-- ===== S3 12–20.2 : Real-time (LTE · GPS) ===== -->
+  <section class="scene" style="--s:12;--e:20.2">
+    <svg class="world" id="w3"></svg>
+    <div class="col">
+      <div class="tag fi" style="--d:12.2"><b>02</b>지금</div>
+      <div class="title fu" style="--d:12.3"><span class="grad">실시간</span>으로 보다</div>
+      <div class="sub fu" style="--d:12.6">LTE · GPS 실시간 트래커</div>
+      <div class="body fu" style="--d:13.0"><span id="b3">정확한 기록에 실시간을 더해,<br><b>온도와 위치</b>를 즉시 확인해요</span></div>
+    </div>
+    <div class="card fu" style="--d:13.2">
+      <h4>실시간 화물 온도 <span style="color:var(--dim)">(예시)</span></h4>
+      <div class="val" id="liveVal">4.3°C</div>
+      <svg width="660" height="180" id="liveChart"></svg>
+      <div class="banner" id="liveBanner"></div>
+    </div>
+  </section>
+
+  <!-- ===== S4 20–26.2 : AI prediction ===== -->
+  <section class="scene" style="--s:20;--e:26.2">
+    <svg class="world" id="w4"></svg>
+    <div class="col">
+      <div class="tag fi" style="--d:20.2"><b style="background:#A78BFA">03</b>다음 단계</div>
+      <div class="title fu" style="--d:20.3"><span class="vgrad">예측</span>하다</div>
+      <div class="sub fu" style="--d:20.6;color:#C4B5FD">AI 예측 · 개발 중인 방향</div>
+      <div class="body fu" style="--d:21.0">쌓인 물류 데이터를 AI가 학습해<br>문제가 생기기 <b>전에 미리</b> 알리는 게 목표예요</div>
+    </div>
+    <div class="card fu" style="--d:21.0;border-color:rgba(167,139,250,.35)">
+      <h4>AI 온도 예측 <span style="color:var(--dim)">(예시 화면)</span></h4>
+      <svg width="660" height="180" id="fcChart"></svg>
+      <div class="banner fi" style="--d:23.4;background:rgba(167,139,250,.14);border:1.5px solid rgba(167,139,250,.6)"><i style="background:#A78BFA">AI</i>이탈 전에 미리 경고 (개발 목표)</div>
+    </div>
+  </section>
+
+  <!-- chapter stepper (4–26) -->
+  <section class="scene" style="--s:4;--e:26.2">
+    <div class="stepper">
+      <div class="step" id="st0"><span>01</span>기록</div><div class="arrow"></div>
+      <div class="step" id="st1"><span>02</span>실시간</div><div class="arrow"></div>
+      <div class="step" id="st2"><span>03</span>예측</div>
+    </div>
+  </section>
+
+  <!-- ===== S5 26–30 : Evolution + Logo ===== -->
+  <section class="scene last" style="--s:26">
+    <div class="foUp" style="--d:27.55">
+      <svg class="world" id="w5"></svg>
+    </div>
+    <div class="center">
+      <div class="logo pop" style="--d:27.95">
+        <svg class="mark" viewBox="0 0 100 100">
+          <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22D3EE"/><stop offset="1" stop-color="#3B82F6"/></linearGradient></defs>
+          <rect x="4" y="4" width="92" height="92" rx="26" fill="url(#lg)"/>
+          <path class="draw" style="--d:27.95;--dur:.4" pathLength="1" d="M18 38 L32 70 L44 44 L56 70 L68 38 L76 52 L84 52" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="word">willog</div>
+      </div>
+      <div class="tagline fu" style="--d:28.1">콜드체인의 모든 순간을 <span class="grad">데이터로</span></div>
+      <div class="url fi" style="--d:28.25">willog.io</div>
+    </div>
+  </section>
+</div>
+</div>
+
+<div id="rotHint">📱 가로로 돌리면 크게 보여요</div>
+<div id="start" class="loading"><div id="startBtn">불러오는 중…</div><p class="rot">📱 휴대폰을 <b>가로로</b> 돌리면<br>훨씬 크게 보여요</p></div>
+<div id="end"><a href="https://willog.io" target="_blank" rel="noopener">willog.io 방문하기</a><button id="replay">↺ 다시 보기</button></div>
+<div id="ui">
+  <button id="play" title="재생/일시정지 (Space)">▶</button>
+  <button id="restart" title="처음부터 (R)">↺</button>
+  <input id="seek" type="range" min="0" max="30" step="0.01" value="0">
+  <span id="time">0.0 / 30.0s</span>
+  <button id="mute" title="소리 (M)">🔊</button>
+  <span class="hint">H: 컨트롤 숨기기</span>
+</div>
+<audio id="bgm" src="bgm.m4a" preload="auto"></audio>
+
+<script>
+const DURATION = 30;
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+const stage = $('stage');
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+/* ================= isometric toolkit ================= */
+const C = Math.cos(Math.PI / 6);
+const P = (x, y, z = 0) => [(x - y) * C, (x + y) * 0.5 - z];
+const pts = a => a.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+function shade(hex, f) {
+  const n = parseInt(hex.slice(1), 16), c = [n >> 16, n >> 8 & 255, n & 255];
+  const m = v => Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f);
+  return `rgb(${c.map(m).join(',')})`;
+}
+function box(parent, x, y, z, w, d, h, col, o = {}) {
+  const g = el('g', {}, parent);
+  const mk = () => el('polygon', {stroke: o.stroke || 'rgba(255,255,255,.07)', 'stroke-width': 1, 'stroke-linejoin': 'round'}, g);
+  const top = mk(), left = mk(), right = mk();
+  const b = {g, set(x, y, z, w, d, h, c = col) {
+    top.setAttribute('points', pts([P(x, y, z + h), P(x + w, y, z + h), P(x + w, y + d, z + h), P(x, y + d, z + h)]));
+    left.setAttribute('points', pts([P(x, y + d, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x, y + d, z + h)]));
+    right.setAttribute('points', pts([P(x + w, y, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x + w, y, z + h)]));
+    b.color(c);
+  }, color(c) {
+    top.setAttribute('fill', shade(c, o.topF ?? .14)); left.setAttribute('fill', shade(c, -.16)); right.setAttribute('fill', shade(c, -.38));
+  }};
+  b.set(x, y, z, w, d, h);
+  return b;
+}
+// 2D drawing plane lying on a box's front-left face (x–z plane at y = const)
+const faceXZ = (parent, x, y, z) => { const o = P(x, y, z); return el('g', {transform: `matrix(${C} .5 0 1 ${o[0]} ${o[1]})`}, parent); };
+// 2D plane lying on the ground (x–y plane)
+const faceXY = (parent, x, y, z) => { const o = P(x, y, z); return el('g', {transform: `matrix(${C} .5 ${-C} .5 ${o[0]} ${o[1]})`}, parent); };
+
+/* ================= world builder ================= */
+const ROAD_Y = 262;
+function buildWorld(svg, o = {}) {
+  const root = el('g', {transform: `translate(${o.cx ?? 1250},${o.cy ?? 300}) scale(${o.s ?? .88})`}, svg);
+  const Wd = 680, Dp = 460;
+  // floating platform
+  el('ellipse', {cx: P(340, 230)[0], cy: P(340, 230)[1] + 120, rx: 560, ry: 150, fill: 'rgba(0,0,0,.35)', filter: 'blur(30px)'}, root);
+  box(root, 0, 0, -30, Wd, Dp, 30, o.base || '#183152', {topF: .06});
+  const grid = el('g', {opacity: .28}, root);
+  for (let x = 40; x < Wd; x += 40) { const a = P(x, 0), b = P(x, Dp); el('line', {x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: o.gridCol || '#6B93C9', 'stroke-width': .7}, grid); }
+  for (let y = 40; y < Dp; y += 40) { const a = P(0, y), b = P(Wd, y); el('line', {x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: o.gridCol || '#6B93C9', 'stroke-width': .7}, grid); }
+  // road
+  box(root, 0, ROAD_Y - 14, 0, Wd, 76, 2, '#28466E', {topF: 0});
+  for (let x = 14; x < Wd; x += 56) box(root, x, ROAD_Y + 22, 2, 28, 4, .5, '#A9C3E6', {stroke: 'none'});
+  // warehouse (cold storage)
+  box(root, 40, 60, 0, 170, 130, 96, '#C8D8EE');
+  box(root, 70, 80, 96, 40, 30, 16, '#8FA8CC'); box(root, 140, 80, 96, 40, 30, 16, '#8FA8CC');
+  const wf = faceXZ(root, 40, 190, 96);
+  el('rect', {x: 20, y: 44, width: 64, height: 52, fill: '#5C7BA6'}, wf);
+  el('rect', {x: 100, y: 44, width: 54, height: 52, fill: '#5C7BA6'}, wf);
+  // hospital / pharmacy destination
+  box(root, 470, 40, 0, 150, 150, 132, '#E4ECF7');
+  box(root, 520, 70, 132, 50, 50, 10, '#B7C7DE');
+  const hf = faceXZ(root, 470, 190, 132);
+  el('rect', {x: 58, y: 18, width: 34, height: 34, rx: 4, fill: '#F43F5E'}, hf);
+  el('rect', {x: 70, y: 22, width: 10, height: 26, fill: '#fff'}, hf);
+  el('rect', {x: 62, y: 30, width: 26, height: 10, fill: '#fff'}, hf);
+  for (let i = 0; i < 3; i++) el('rect', {x: 18 + i * 44, y: 70, width: 26, height: 22, fill: '#7E9AC2'}, hf);
+  el('rect', {x: 56, y: 104, width: 40, height: 28, fill: '#7E9AC2'}, hf);
+  // pallets & trees
+  box(root, 230, 150, 0, 40, 40, 22, '#7F9CC4'); box(root, 236, 156, 22, 28, 28, 18, '#A7BEDC');
+  [[20, 400], [90, 420], [600, 400], [640, 360], [400, 30]].forEach(([x, y]) => { box(root, x, y, 0, 10, 10, 14, '#5B4636'); box(root, x - 8, y - 8, 14, 26, 26, 26, o.tree || '#2F8F75'); });
+  const extra = el('g', {}, root);   // layer for scene-specific props behind the truck
+  const truck = makeTruck(root, o);
+  const front = el('g', {}, root);   // layer above everything
+  return {root, truck, extra, front};
+}
+function makeTruck(parent, o) {
+  const g = el('g', {}, parent);
+  el('polygon', {points: pts([P(-6, ROAD_Y + 2), P(156, ROAD_Y + 2), P(156, ROAD_Y + 52), P(-6, ROAD_Y + 52)]), fill: 'rgba(0,0,0,.3)'}, g);
+  [14, 74, 124].forEach(x => box(g, x, ROAD_Y + 44, 0, 20, 4, 14, '#0B1220', {stroke: 'none'}));
+  box(g, 0, ROAD_Y, 6, 112, 46, 56, '#EEF4FC');
+  box(g, 112, ROAD_Y + 4, 6, 40, 38, 40, '#3B82F6');
+  box(g, 140, ROAD_Y + 8, 30, 12, 30, 12, '#BFE3FF', {stroke: 'none'});
+  const side = faceXZ(g, 0, ROAD_Y + 46, 62);
+  el('text', {x: 16, y: 34, fill: '#2563EB', 'font-size': 24, 'font-weight': 800, 'font-family': 'Montserrat'}, side).textContent = 'willog';
+  el('rect', {x: 16, y: 42, width: 80, height: 3, fill: '#22D3EE'}, side);
+  const sensor = box(g, 48, ROAD_Y + 16, 62, 16, 16, 7, o.sensor || '#22D3EE');
+  return {g, sensor, x: 0, move(x) { this.x = x; const p = P(x, 0); g.setAttribute('transform', `translate(${p[0].toFixed(1)},${p[1].toFixed(1)})`); },
+          top(dz = 0) { return P(this.x + 56, ROAD_Y + 24, 69 + dz); }};
+}
+
+/* ================= helpers ================= */
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+let t = 0;
+const prog = (a, b) => ease(clamp((t - a) / (b - a)));
+const lerp = (a, b, k) => a + (b - a) * k;
+const lerp3 = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
+
+/* ================= scene builds ================= */
+// snow-like particles
+for (let i = 0; i < 46; i++) {
+  const d = document.createElement('div');
+  d.style.cssText = `position:absolute;left:${Math.random() * 1920}px;top:${Math.random() * 1080}px;width:${2 + Math.random() * 3}px;height:${2 + Math.random() * 3}px;border-radius:50%;background:#BFE9FF;opacity:${.15 + Math.random() * .35};animation:drift ${8 + Math.random() * 8}s linear ${-Math.random() * 16}s infinite`;
+  $('flakes').appendChild(d);
+}
+document.head.appendChild(Object.assign(document.createElement('style'), {textContent: '@keyframes drift{from{transform:translate(0,-60px)}to{transform:translate(-80px,160px)}}'}));
+
+// S1
+const W1 = buildWorld($('w1'));
+W1.truck.move(30);
+
+// S2 passive
+const W2 = buildWorld($('w2'), {sensor: '#94A3B8'});
+const q = el('g', {opacity: 0}, W2.front);
+el('rect', {x: -185, y: -74, width: 370, height: 66, rx: 18, fill: '#0E1E38', stroke: '#CBD5E1', 'stroke-width': 2.5}, q);
+el('path', {d: 'M-10 -8 L0 6 L10 -8 Z', fill: '#0E1E38', stroke: '#94A3B8', 'stroke-width': 2}, q);
+el('rect', {x: -11, y: -10, width: 22, height: 4, fill: '#0E1E38'}, q);
+el('text', {x: 0, y: -30, fill: '#fff', 'font-size': 33, 'font-weight': 800, 'text-anchor': 'middle'}, q).textContent = '지금 상태? 알 수 없음';
+const phone = el('g', {opacity: 0}, W2.front);
+el('rect', {x: -26, y: -50, width: 52, height: 92, rx: 10, fill: '#0F172A', stroke: '#CBD5E1', 'stroke-width': 3}, phone);
+el('rect', {x: -18, y: -38, width: 36, height: 62, rx: 4, fill: '#1E3A5F'}, phone);
+const nfc = [0, 1, 2].map(i => el('path', {d: `M${36 + i * 16} -24 q${12 + i * 6} 24 0 48`, fill: 'none', stroke: '#E2E8F0', 'stroke-width': 4, 'stroke-linecap': 'round', opacity: 0}, phone));
+// limit band helper for the card charts (2–8°C)
+function limits(svg, Yf, w = 660, lowRight = true) {
+  el('rect', {x: 0, y: Yf(8), width: w, height: Yf(2) - Yf(8), fill: 'rgba(52,211,153,.07)'}, svg);
+  el('line', {x1: 0, x2: w, y1: Yf(8), y2: Yf(8), stroke: 'rgba(244,63,94,.75)', 'stroke-dasharray': '8 6', 'stroke-width': 2}, svg);
+  el('line', {x1: 0, x2: w, y1: Yf(2), y2: Yf(2), stroke: 'rgba(96,165,250,.75)', 'stroke-dasharray': '8 6', 'stroke-width': 2}, svg);
+  el('text', {x: 4, y: Yf(8) - 8, fill: '#FB7185', 'font-size': 28, 'font-weight': 800}, svg).textContent = '8°C 기준';
+  // 2°C label sits at the right end so it never collides with bars / the time axis on the left
+  el('text', lowRight ? {x: w, y: Yf(2) + 30, fill: '#60A5FA', 'font-size': 28, 'font-weight': 800, 'text-anchor': 'end'}
+                      : {x: 4, y: Yf(2) + 28, fill: '#60A5FA', 'font-size': 28, 'font-weight': 800}, svg).textContent = '2°C';
+}
+// bars chart (card)
+const BARS = [4.1, 4.5, 4.3, 4.8, 5.6, 7.2, 8.6, 9.1, 7.8, 5.2, 4.6, 4.4];
+const bSvg = $('bars'), bY = T => 150 - T * 13;
+limits(bSvg, bY, 640);
+const barEls = BARS.map((T, i) => el('rect', {x: 8 + i * 50, width: 32, rx: 6, y: 150, height: 0, fill: T > 8 ? '#F43F5E' : '#64748B'}, bSvg));
+
+// S3 real-time
+const W3 = buildWorld($('w3'));
+const ANT = [330, 120, 196], CLOUD = [330, 110, 262], SAT = [650, -60, 330];
+box(W3.extra, 318, 108, 0, 24, 24, 186, '#8BA3C7');
+box(W3.extra, 324, 114, 186, 12, 12, 12, '#22D3EE');
+const cloud = box(W3.extra, 250, 40, 250, 170, 140, 10, '#1B4E86', {topF: .1});
+const cf = faceXY(W3.extra, 262, 52, 260);
+el('rect', {x: 0, y: 0, width: 146, height: 116, rx: 10, fill: 'rgba(34,211,238,.18)', stroke: '#22D3EE', 'stroke-width': 2}, cf);
+el('text', {x: 14, y: 34, fill: '#E0F7FF', 'font-size': 20, 'font-weight': 800, 'font-family': 'Montserrat'}, cf).textContent = 'WILLOG';
+el('polyline', {points: '14,96 40,84 62,90 88,72 112,80 134,66', fill: 'none', stroke: '#22D3EE', 'stroke-width': 3}, cf);
+// satellite
+box(W3.extra, SAT[0], SAT[1], SAT[2], 22, 22, 16, '#CBD5E1');
+box(W3.extra, SAT[0] - 46, SAT[1] + 6, SAT[2] + 6, 40, 10, 3, '#3B82F6');
+box(W3.extra, SAT[0] + 28, SAT[1] + 6, SAT[2] + 6, 40, 10, 3, '#3B82F6');
+const satLbl = el('text', {x: P(...SAT)[0] + 64, y: P(...SAT)[1] - 14, fill: '#BAE6FD', 'font-size': 28, 'font-weight': 800, 'font-family': 'Montserrat'}, W3.extra);
+satLbl.textContent = 'GPS';
+const antP = P(...ANT);
+el('text', {x: antP[0] + 30, y: antP[1] - 4, fill: '#BAE6FD', 'font-size': 28, 'font-weight': 800, 'font-family': 'Montserrat'}, W3.extra).textContent = 'LTE';
+const waves = [0, 1, 2].map(() => el('ellipse', {cx: antP[0], cy: antP[1], fill: 'none', stroke: '#22D3EE', 'stroke-width': 2.5}, W3.extra));
+const gpsLine = el('line', {stroke: 'rgba(147,197,253,.7)', 'stroke-width': 2, 'stroke-dasharray': '6 8'}, W3.front);
+const packets = [0, 1, 2, 3].map(() => box(W3.front, 0, 0, 0, 9, 9, 9, '#22D3EE', {stroke: 'none'}));
+const pin = el('g', {}, W3.front);
+el('path', {d: 'M0 0 C -16 -22 -22 -32 -22 -42 A 22 22 0 1 1 22 -42 C 22 -32 16 -22 0 0 Z', fill: '#22D3EE', stroke: '#071226', 'stroke-width': 3}, pin);
+el('circle', {cx: 0, cy: -42, r: 8, fill: '#071226'}, pin);
+const alertG = el('g', {opacity: 0}, W3.front);
+el('circle', {r: 30, fill: '#F59E0B'}, alertG);
+el('text', {y: 12, fill: '#fff', 'font-size': 36, 'font-weight': 900, 'text-anchor': 'middle'}, alertG).textContent = '!';
+const alertRing = el('circle', {r: 30, fill: 'none', stroke: '#F59E0B', 'stroke-width': 4}, alertG);
+// manager's phone (alert → action → OK)
+const mPhone = el('g', {opacity: 0}, W3.front);
+el('rect', {x: -75, y: -150, width: 150, height: 250, rx: 24, fill: '#0F172A', stroke: '#E2E8F0', 'stroke-width': 4}, mPhone);
+const mScreen = el('rect', {x: -62, y: -130, width: 124, height: 200, rx: 10, fill: '#F59E0B'}, mPhone);
+const mIcon = el('text', {x: 0, y: -24, fill: '#fff', 'font-size': 84, 'font-weight': 900, 'text-anchor': 'middle'}, mPhone);
+const mTxt = el('text', {x: 0, y: 40, fill: '#fff', 'font-size': 30, 'font-weight': 900, 'text-anchor': 'middle'}, mPhone);
+const mLbl = el('text', {x: 0, y: 140, fill: '#fff', 'font-size': 34, 'font-weight': 900, 'text-anchor': 'middle'}, mPhone);
+mLbl.textContent = '담당자 폰';
+// live chart
+const lSvg = $('liveChart'), lY = T => 140 - T * 13;
+limits(lSvg, lY);
+[['0분', 10, 'start'], ['+90분', 560, 'end']].forEach(([s, x, a]) => el('text', {x, y: 178, fill: '#B6C6DE', 'font-size': 28, 'font-weight': 700, 'text-anchor': a}, lSvg).textContent = s);
+const liveLine = el('polyline', {fill: 'none', stroke: '#34D399', 'stroke-width': 4, 'stroke-linejoin': 'round', 'stroke-linecap': 'round'}, lSvg);
+const liveDot = el('circle', {r: 8, fill: '#34D399'}, lSvg);
+const L0 = 13.0, L1 = 19.8;
+function liveTemp(tt) {
+  let T = 4.3 + Math.sin(tt * 3.1) * .18;
+  T += 3.2 * ease(clamp((tt - 14.9) / 1.2)) - 3.2 * ease(clamp((tt - 16.95) / 0.85));
+  return T;
+}
+
+// S4 AI
+const W4 = buildWorld($('w4'), {base: '#211B4A', gridCol: '#8E7CF0', tree: '#4C7F9E'});
+W4.truck.move(250);
+const CORE = [300, 110, 240];
+const lattice = [];
+for (let s = 0; s <= 6; s++) for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) { const k = s - i - j; if (k >= 0 && k < 3) lattice.push({i, j, k, b: box(W4.extra, 0, 0, 0, 20, 20, 20, '#6D5BD0', {stroke: 'rgba(255,255,255,.15)'})}); }
+const coreC = P(CORE[0] + 40, CORE[1] + 40, CORE[2] + 40);
+const glow = el('circle', {cx: coreC[0], cy: coreC[1], r: 90, fill: 'rgba(139,92,246,.35)', filter: 'blur(20px)'}, W4.extra);
+W4.extra.insertBefore(glow, W4.extra.firstChild);
+el('text', {x: coreC[0] + 80, y: coreC[1] - 50, fill: '#DDD6FE', 'font-size': 34, 'font-weight': 800, 'font-family': 'Montserrat'}, W4.extra).textContent = 'AI';
+const flowSrc = [P(125, 125, 112), P(545, 115, 142), P(250 + 56, ROAD_Y + 24, 69)];
+flowSrc.forEach(s => el('path', {d: `M${s[0]} ${s[1]} Q ${(s[0] + coreC[0]) / 2} ${Math.min(s[1], coreC[1]) - 60} ${coreC[0]} ${coreC[1]}`, fill: 'none', stroke: '#A78BFA', 'stroke-width': 3, class: 'flow', opacity: .9}, W4.front));
+// forecast chart
+const fSvg = $('fcChart'), fY = T => 150 - T * 13;
+el('rect', {x: 0, y: fY(8), width: 660, height: fY(2) - fY(8), fill: 'rgba(52,211,153,.06)'}, fSvg);
+el('line', {x1: 0, x2: 660, y1: fY(8), y2: fY(8), stroke: 'rgba(244,63,94,.75)', 'stroke-dasharray': '8 6', 'stroke-width': 2}, fSvg);
+el('line', {x1: 0, x2: 660, y1: fY(2), y2: fY(2), stroke: 'rgba(96,165,250,.75)', 'stroke-dasharray': '8 6', 'stroke-width': 2}, fSvg);
+el('text', {x: 4, y: fY(8) - 8, fill: '#FB7185', 'font-size': 28, 'font-weight': 800}, fSvg).textContent = '8°C 기준';
+el('text', {x: 4, y: fY(2) + 28, fill: '#60A5FA', 'font-size': 28, 'font-weight': 800}, fSvg).textContent = '2°C';
+el('line', {x1: 320, x2: 320, y1: 0, y2: 150, stroke: 'rgba(255,255,255,.3)', 'stroke-width': 2}, fSvg);
+el('text', {x: 320, y: 176, fill: '#CBD5E1', 'font-size': 22, 'font-weight': 700, 'text-anchor': 'middle'}, fSvg).textContent = '지금';
+const toPath = arr => arr.map((p, i) => (i ? 'L' : 'M') + p[0] + ' ' + fY(p[1]).toFixed(1)).join(' ');
+const actual = [[0, 4.2], [40, 4.4], [80, 4.3], [120, 4.6], [160, 4.8], [200, 5.0], [240, 5.3], [280, 5.6], [320, 6.0]];
+const predicted = [[320, 6.0], [380, 6.7], [440, 7.5], [500, 8.3], [560, 8.9], [640, 9.4]];
+const fixed = [[320, 6.0], [380, 5.7], [440, 5.2], [500, 4.9], [560, 4.7], [640, 4.6]];
+const pa = el('path', {d: toPath(actual), fill: 'none', stroke: '#34D399', 'stroke-width': 4, 'stroke-linecap': 'round', pathLength: 1, class: 'draw'}, fSvg);
+pa.style.cssText = '--d:21.4;--dur:.8';
+const pp = el('path', {d: toPath(predicted), fill: 'none', stroke: '#F43F5E', 'stroke-width': 5, 'stroke-dasharray': '10 8', 'stroke-linecap': 'round', class: 'fi'}, fSvg);
+pp.style.cssText = '--d:22.2';
+const ppl = el('text', {x: 650, y: fY(9.4) - 10, fill: '#FDA4AF', 'font-size': 27, 'font-weight': 800, 'text-anchor': 'end', class: 'fi'}, fSvg);
+ppl.textContent = '조치 안 하면'; ppl.style.cssText = '--d:22.3';
+const mk = el('g', {class: 'pop'}, fSvg); mk.style.cssText = '--d:22.7';
+el('circle', {cx: 482, cy: fY(8), r: 11, fill: '#F43F5E', stroke: '#fff', 'stroke-width': 3}, mk);
+const pf = el('path', {d: toPath(fixed), fill: 'none', stroke: '#C4B5FD', 'stroke-width': 5, 'stroke-dasharray': '10 8', 'stroke-linecap': 'round', class: 'fi'}, fSvg);
+pf.style.cssText = '--d:23.4';
+const pfd = el('circle', {cx: 640, cy: fY(4.6), r: 9, fill: '#C4B5FD', stroke: '#fff', 'stroke-width': 3, class: 'fi'}, fSvg);
+pfd.style.cssText = '--d:23.5';
+const pfl = el('text', {x: 560, y: fY(4.6) + 30, fill: '#EDE9FE', 'font-size': 27, 'font-weight': 800, 'text-anchor': 'end', class: 'fi'}, fSvg);
+pfl.textContent = '조치하면'; pfl.style.cssText = '--d:23.5';
+
+// S5 pedestals
+const R5 = el('g', {transform: 'translate(700,560)'}, $('w5'));
+const PED = [
+  {x: 0, y: 0, h: 70, c: '#64748B', a: '01 기록', b: 'BLE · NFC'},
+  {x: 150, y: -150, h: 140, c: '#22D3EE', a: '02 실시간', b: 'LTE · GPS'},
+  {x: 300, y: -300, h: 165, c: '#8B5CF6', a: '03 예측', b: 'AI'}];
+PED.forEach((p, i) => {
+  p.box = box(R5, p.x, p.y, 0, 110, 110, 1, p.c, i === 2 ? {stroke: 'rgba(237,233,254,.95)'} : {});
+  if (i === 2) { p.box.g.setAttribute('fill-opacity', '.35'); p.box.g.setAttribute('stroke-dasharray', '8 6'); p.box.g.setAttribute('stroke-width', '2.5'); }
+  p.lbl = el('g', {class: 'fu'}, R5); p.lbl.style.cssText = `--d:${26.1 + i * .12}`;
+  p.t1 = el('text', {'text-anchor': 'middle', fill: '#fff', 'font-size': 38, 'font-weight': 900}, p.lbl); p.t1.textContent = p.a;
+  p.t2 = el('text', {'text-anchor': 'middle', fill: p.c === '#64748B' ? '#CBD5E1' : p.c, 'font-size': 28, 'font-weight': 800, 'font-family': 'Montserrat'}, p.lbl); p.t2.textContent = p.b;
+  if (i === 2) {
+    p.t3 = el('g', {}, p.lbl);
+    el('rect', {x: -80, y: -30, width: 160, height: 46, rx: 23, fill: '#7C3AED', stroke: '#EDE9FE', 'stroke-width': 2}, p.t3);
+    el('text', {x: 0, y: 2, 'text-anchor': 'middle', fill: '#fff', 'font-size': 28, 'font-weight': 900}, p.t3).textContent = '개발 중';
+  }
+});
+
+/* ================= per-frame updates ================= */
+function update() {
+  // S1 truck idles in front of warehouse
+  W1.truck.move(30 + Math.sin(t * 2) * 1.5);
+
+  // S2 passive: truck travels blind, then tag at arrival
+  const k2 = prog(4.9, 7.8);
+  W2.truck.move(lerp(30, 440, k2));
+  const tp = W2.truck.top(40);
+  q.setAttribute('transform', `translate(${tp[0].toFixed(1)},${(tp[1] + Math.sin(t * 4) * 4).toFixed(1)})`);
+  q.setAttribute('opacity', (clamp((t - 5.3) / .3) * (1 - clamp((t - 7.6) / .3))).toFixed(2));
+  const ph = P(640, ROAD_Y + 110, 40);
+  phone.setAttribute('transform', `translate(${ph[0]},${ph[1]})`);
+  phone.setAttribute('opacity', clamp((t - 7.8) / .3).toFixed(2));
+  nfc.forEach((n, i) => n.setAttribute('opacity', t > 8.0 ? (.3 + .7 * ((Math.sin((t - 8.0) * 8 - i) + 1) / 2)).toFixed(2) : 0));
+  W2.truck.sensor.color(t > 8.0 && t < 8.8 && Math.floor(t * 8) % 2 ? '#E2E8F0' : '#94A3B8');
+  barEls.forEach((b, i) => {
+    const h = (150 - bY(BARS[i])) * prog(8.5 + i * .05, 9.0 + i * .05);
+    b.setAttribute('y', (150 - h).toFixed(1)); b.setAttribute('height', h.toFixed(1));
+  });
+
+  // S3 real-time
+  const k3 = prog(12.4, 19.6);
+  W3.truck.move(lerp(30, 430, k3));
+  const sens = [W3.truck.x + 56, ROAD_Y + 24, 70];
+  packets.forEach((pk, i) => {
+    const ph3 = ((t * 1.1) + i / 4) % 1;
+    const p3 = ph3 < .5 ? lerp3(sens, ANT, ph3 * 2) : lerp3([ANT[0], ANT[1], ANT[2] + 10], CLOUD, (ph3 - .5) * 2);
+    pk.set(p3[0] - 4, p3[1] - 4, p3[2], 9, 9, 9, liveTemp(t) > 6.5 && t < 17.3 ? '#FBBF24' : '#22D3EE');
+    pk.g.setAttribute('opacity', t < 13 ? 0 : 1);
+  });
+  waves.forEach((w, i) => { const ph = ((t * .8) + i / 3) % 1; w.setAttribute('rx', (14 + ph * 90).toFixed(1)); w.setAttribute('ry', (8 + ph * 50).toFixed(1)); w.setAttribute('opacity', ((1 - ph) * .8).toFixed(2)); });
+  const top3 = W3.truck.top(30), satP = P(SAT[0] + 11, SAT[1] + 11, SAT[2]);
+  gpsLine.setAttribute('x1', satP[0]); gpsLine.setAttribute('y1', satP[1]);
+  gpsLine.setAttribute('x2', top3[0]); gpsLine.setAttribute('y2', top3[1]);
+  const pinP = W3.truck.top(54);
+  pin.setAttribute('transform', `translate(${pinP[0].toFixed(1)},${(pinP[1] - Math.abs(Math.sin(t * 3)) * 10).toFixed(1)})`);
+  const lt = liveTemp(t);
+  const warn = t > 15.5 && t < 17.8;
+  const ap = W3.truck.top(84);
+  alertG.setAttribute('transform', `translate(${(ap[0] + 62).toFixed(1)},${ap[1].toFixed(1)})`);
+  alertG.setAttribute('opacity', warn ? 1 : 0);
+  alertRing.setAttribute('r', (30 + ((t * 1.6) % 1) * 30).toFixed(1));
+  alertRing.setAttribute('opacity', (1 - (t * 1.6) % 1).toFixed(2));
+  W3.truck.sensor.color(warn ? '#F59E0B' : '#22D3EE');
+  // live chart
+  const now = clamp(t, L0, L1), arr = [];
+  for (let tt = L0; tt <= now + 1e-6; tt += .05) arr.push([((tt - L0) / (L1 - L0) * 640 + 10).toFixed(1), lY(liveTemp(tt)).toFixed(1)]);
+  liveLine.setAttribute('points', arr.map(p => p.join(',')).join(' '));
+  const last = arr[arr.length - 1] || [10, lY(4.3)];
+  liveDot.setAttribute('cx', last[0]); liveDot.setAttribute('cy', last[1]);
+  const col = (t > 15.3 && t < 17.8) || lt > 6.5 ? '#FBBF24' : '#34D399';
+  $('b3').style.opacity = t > 15.5 && t < 18.2 ? .5 : 1;
+  liveLine.setAttribute('stroke', '#34D399'); liveDot.setAttribute('fill', col);
+  $('liveVal').textContent = lt.toFixed(1) + '°C'; $('liveVal').style.color = col;
+  const bn = $('liveBanner');
+  if (t < 15.5) { bn.style.cssText = 'background:rgba(52,211,153,.12);border:1.5px solid rgba(52,211,153,.5)'; bn.innerHTML = '<i style="background:#34D399">✓</i>정상 · 온도와 위치 실시간 전송 중'; }
+  else if (t < 16.6) { bn.style.cssText = 'background:rgba(245,158,11,.16);border:1.5px solid rgba(245,158,11,.75)'; bn.innerHTML = '<i style="background:#F59E0B">!</i>온도 상승 감지 → 담당자에게 즉시 알림'; }
+  else if (t < 17.8) { bn.style.cssText = 'background:rgba(59,130,246,.16);border:1.5px solid rgba(96,165,250,.75)'; bn.innerHTML = '<i style="background:#60A5FA">☎</i>담당자가 기사에게 바로 연락'; }
+  else { bn.style.cssText = 'background:rgba(52,211,153,.12);border:1.5px solid rgba(52,211,153,.5)'; bn.innerHTML = '<i style="background:#34D399">✓</i>이탈 방지 · 온도 기록도 그대로 남아요'; }
+  // manager phone: alert (15.5) → call driver (16.6) → OK (17.8)
+  const mp = P(40, 420, 110);
+  mPhone.setAttribute('transform', `translate(${mp[0]},${mp[1]}) scale(${(.8 + .2 * prog(15.5, 15.8)).toFixed(3)})`);
+  mPhone.setAttribute('opacity', (clamp((t - 15.5) / .25) * (1 - clamp((t - 19.5) / .3))).toFixed(2));
+  if (t < 16.6) { mScreen.setAttribute('fill', '#F59E0B'); mIcon.textContent = '!'; mTxt.textContent = '온도 상승'; }
+  else if (t < 17.8) { mScreen.setAttribute('fill', '#3B82F6'); mIcon.textContent = '☎'; mTxt.textContent = '기사 연락'; }
+  else { mScreen.setAttribute('fill', '#10B981'); mIcon.textContent = '✓'; mTxt.textContent = '정상 복귀'; }
+
+  // S4 AI core
+  W4.truck.move(250 + (t - 20) * 18);
+  const bob = Math.sin(t * 2) * 6;
+  lattice.forEach(c => {
+    const pulse = (Math.sin(t * 5 - (c.i + c.j + c.k) * .9) + 1) / 2;
+    const on = pulse > .7;
+    c.b.set(CORE[0] + c.i * 28, CORE[1] + c.j * 28, CORE[2] + c.k * 28 + bob, 20, 20, 20, on ? '#C4B5FD' : '#6D5BD0');
+  });
+
+  // S5 pedestals rise
+  PED.forEach((p, i) => {
+    const h = Math.max(1, p.h * prog(26.0 + i * .12, 26.55 + i * .12));
+    p.box.set(p.x, p.y, 0, 110, 110, h);
+    const tp5 = P(p.x + 55, p.y + 55, h);
+    p.t1.setAttribute('x', tp5[0]); p.t1.setAttribute('y', tp5[1] - (p.t3 ? 172 : 128));
+    p.t2.setAttribute('x', tp5[0]); p.t2.setAttribute('y', tp5[1] - (p.t3 ? 134 : 90));
+    if (p.t3) p.t3.setAttribute('transform', `translate(${tp5[0]},${tp5[1] - 88})`);
+  });
+
+  // stepper
+  const ch = t < 12 ? 0 : t < 20 ? 1 : 2;
+  [0, 1, 2].forEach(i => { const s = $('st' + i); s.className = 'step' + (i === ch ? ' on' + (i === 2 ? ' ai' : '') : i < ch ? ' done' : ''); });
+}
+
+/* ================= stage fit + master clock ================= */
+function fit() {
+  const vp = $('vp'), w = vp.clientWidth, h = vp.clientHeight;
+  const s = Math.min(w / 1920, h / 1080);
+  stage.style.transform = `translate(-50%,-50%) scale(${s})`;
+}
+addEventListener('resize', fit); addEventListener('orientationchange', () => setTimeout(fit, 200)); fit();
+
+const bgm = $('bgm');
+let anims = [], playing = false, lastNow = 0;
+function render() {
+  for (const a of anims) a.currentTime = t * 1000;
+  update();
+  $('seek').value = t;
+  $('time').textContent = t.toFixed(1) + ' / ' + DURATION.toFixed(1) + 's';
+  $('play').textContent = playing ? '❚❚' : '▶';
+}
+function syncAudio() {
+  if (!bgm.src) return;
+  try { lastSeek = performance.now(); bgm.currentTime = t; if (playing) bgm.play().catch(() => {}); else bgm.pause(); } catch (e) {}
+}
+// audio buffering: freeze the visual clock while the music is still loading
+// (at most once per play, max 3 s, then carry on silently; ignore 'waiting' caused by our own re-sync seeks)
+let stalled = false, stallSince = 0, stallUsed = false, lastSeek = 0, stallMax = 3000;
+bgm.addEventListener('waiting', () => {
+  if (!playing || bgm.muted || stallUsed || performance.now() - lastSeek < 800) return;
+  stalled = true; stallUsed = true; stallSince = performance.now(); stallMax = 3000;
+});
+bgm.addEventListener('playing', () => { stalled = false; });
+bgm.addEventListener('error', () => { stalled = false; });
+// auto-hide the control bar while playing (tap / move to show it again)
+let idleTimer;
+function poke() {
+  $('ui').classList.remove('idle');
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => { if (playing) $('ui').classList.add('idle'); }, 2500);
+}
+['pointermove', 'pointerdown', 'keydown'].forEach(ev => addEventListener(ev, poke, {passive: true}));
+function loop(now) {
+  if (stalled && now - stallSince > stallMax) stalled = false;
+  if (playing && !stalled) {
+    t += (now - lastNow) / 1000;
+    if (t >= DURATION) { t = DURATION; playing = false; bgm.pause(); $('end').classList.add('show'); }
+    // keep audio locked to the visual clock
+    if (playing && !bgm.seeking && bgm.readyState >= 3 && Math.abs(bgm.currentTime - t) > .15 && performance.now() - lastSeek > 1000) { lastSeek = performance.now(); bgm.currentTime = t; }
+    render();
+  }
+  lastNow = now;
+  requestAnimationFrame(loop);
+}
+function play() {
+  if (t >= DURATION) t = 0; $('end').classList.remove('show'); stallUsed = false; playing = true; lastNow = performance.now();
+  syncAudio();
+  // iOS ignores preload: if the music isn't buffered yet, hold the picture up to 1.5 s so sound and image start together
+  if (!bgm.muted && !bgm.error && bgm.readyState < 3) { stalled = true; stallUsed = true; stallSince = performance.now(); stallMax = 1500; }
+  render(); poke();
+}
+function pause() { playing = false; stalled = false; syncAudio(); render(); $('ui').classList.remove('idle'); }
+
+$('play').onclick = () => playing ? pause() : play();
+$('restart').onclick = () => { t = 0; play(); };
+$('replay').onclick = () => { t = 0; play(); };
+$('seek').oninput = e => { t = +e.target.value; render(); syncAudio(); };
+$('mute').onclick = () => { bgm.muted = !bgm.muted; $('mute').textContent = bgm.muted ? '🔇' : '🔊'; };
+$('start').onclick = () => {
+  if ($('start').classList.contains('loading')) return;
+  $('start').classList.add('hide'); document.body.classList.add('started');
+  // Android: try landscape fullscreen (silently ignored where unsupported, e.g. iOS)
+  if (matchMedia('(orientation:portrait) and (hover:none)').matches) {
+    try {
+      const fs = document.documentElement.requestFullscreen?.();
+      if (fs) fs.then(() => screen.orientation?.lock?.('landscape')).catch(() => {});
+    } catch (e) {}
+  }
+  t = 0; play();
+};
+document.addEventListener('fullscreenchange', () => setTimeout(fit, 150));
+addEventListener('keydown', e => {
+  if ($('start').classList.contains('loading')) return;
+  if (e.code === 'Space') { e.preventDefault(); $('start').classList.add('hide'); document.body.classList.add('started'); playing ? pause() : play(); }
+  if (e.key === 'r' || e.key === 'R') { $('start').classList.add('hide'); document.body.classList.add('started'); t = 0; play(); }
+  if (e.key === 'h' || e.key === 'H') $('ui').classList.toggle('hide');
+  if (e.key === 'm' || e.key === 'M') $('mute').click();
+});
+
+// start-up: wait for fonts (max 2.5 s), then enable the start button as soon as the music can play
+// or 3 s after page start at the latest — "불러오는 중…" can never hang
+const T_START = performance.now();
+const enable = () => { $('start').classList.remove('loading'); $('startBtn').textContent = '▶ 소리 켜고 재생'; };
+const fontsArrived = new Promise(r => window.gfReady ? r() : document.addEventListener('gf', r, {once: true}))
+  .then(() => document.fonts.ready);
+window.ready = Promise.race([fontsArrived, new Promise(r => setTimeout(r, 2500))]).then(() => {
+  anims = document.getAnimations();
+  anims.forEach(a => a.pause());
+  render();
+  requestAnimationFrame(loop);
+  if (bgm.readyState >= 3) enable();
+  else {
+    bgm.addEventListener('canplaythrough', enable, {once: true});
+    setTimeout(enable, Math.max(0, 3000 - (performance.now() - T_START)));
+  }
+});
+</script>
+</body>
+</html>
